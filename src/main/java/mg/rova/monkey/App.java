@@ -1,94 +1,73 @@
 package mg.rova.monkey;
 
-import com.jme3.animation.AnimChannel;
-import com.jme3.animation.AnimControl;
-import com.jme3.animation.AnimEventListener;
-import com.jme3.animation.LoopMode;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.light.DirectionalLight;
+import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.input.controls.Trigger;
+import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Node;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.shape.Box;
+import com.jme3.system.AppSettings;
 
-public class App extends SimpleApplication implements AnimEventListener {
+public class App extends SimpleApplication {
+
+	public static final Trigger TRIGGER_COLOR = new KeyTrigger(KeyInput.KEY_SPACE);
+	public static final Trigger TRIGGER_COLOR_G = new KeyTrigger(KeyInput.KEY_G);
+	public static final Trigger TRIGGER_ROTATE = new MouseButtonTrigger(MouseInput.BUTTON_LEFT);
+	public static final String MAPPING_COLOR = "Toggle Color";
+	public static final String MAPPING_ROTATE = "Rotate";
+
+	private Geometry geometry;
 
 	public static void main(String[] args) {
 		final App app = new App();
+
+		final AppSettings settings = new AppSettings(true);
+		settings.setTitle("Game Beta 1.0");
+		settings.setResolution(1024, 768);
+		app.setSettings(settings);
+
 		app.start();
 	}
 
-	private AnimChannel channel;
-	private AnimControl control;
-	Node player;
-
 	@Override
 	public void simpleInitApp() {
-		viewPort.setBackgroundColor(ColorRGBA.LightGray);
-		initKeys();
-		DirectionalLight dl = new DirectionalLight();
-		dl.setDirection(new Vector3f(-0.1f, -1f, -1).normalizeLocal());
-		rootNode.addLight(dl);
+		final Box box = new Box(1, 1, 1);
+		geometry = new Geometry("Box", box);
+		final Material material = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+		material.setColor("Color", ColorRGBA.Blue);
+		geometry.setMaterial(material);
+		rootNode.attachChild(geometry);
 
-		player = (Node) assetManager.loadModel("Models/Oto/Oto.mesh.xml");
-		player.setLocalScale(0.5f);
-		rootNode.attachChild(player);
+		final Box box2 = new Box(8, 1, 8);
+		final Geometry geometry2 = new Geometry("Box2", box2);
+		final Material material2 = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+		material2.setColor("Color", ColorRGBA.Gray);
+		geometry2.setMaterial(material2);
+		geometry2.setLocalTranslation(0, -5f, 0);
+		rootNode.attachChild(geometry2);
 
-		control = player.getControl(AnimControl.class);
-		control.addListener(this);
-
-		channel = control.createChannel();
-		channel.setAnim("stand");
-	}
-
-	/** Custom Keybinding: Map named actions to inputs. */
-	private void initKeys() {
-		inputManager.addMapping("Walk", new KeyTrigger(KeyInput.KEY_I));
-		inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_J));
-		inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_L));
+		inputManager.addMapping(MAPPING_COLOR, TRIGGER_COLOR, TRIGGER_COLOR_G);
+		inputManager.addMapping(MAPPING_ROTATE, TRIGGER_ROTATE);
 		inputManager.addListener(new ActionListener() {
 
-			public void onAction(String name, boolean keyPressed, float tpf) {
-				if (name.equals("Walk") && keyPressed) {
-					if (!channel.getAnimationName().equals("Walk")) {
-						channel.setAnim("Walk", 0.50f);
-						channel.setLoopMode(LoopMode.Loop);
-					}
-				}
-				if (name.equals("Walk") && !keyPressed) {
-					channel.setAnim("stand", 0.50f);
-					channel.setLoopMode(LoopMode.DontLoop);
-					channel.setSpeed(1.50f);
-				}
+			public void onAction(String name, boolean isPressed, float tpf) {
+				if (name.equals(MAPPING_COLOR) && !isPressed)
+					geometry.getMaterial().setColor("Color", ColorRGBA.randomColor());
 			}
-		}, "Walk");
+		}, MAPPING_COLOR);
 		inputManager.addListener(new AnalogListener() {
 
 			public void onAnalog(String name, float value, float tpf) {
-				if (name.equals("Walk")) {
-					Vector3f vector = player.getLocalTranslation();
-					player.setLocalTranslation(vector.x, vector.y, vector.z + value * speed);
-				}
-				if (name.equals("Left")) {
-					Vector3f vector = player.getLocalTranslation();
-					player.setLocalTranslation(vector.x - value * speed, vector.y, vector.z);
-				}
-				if (name.equals("Right")) {
-					Vector3f vector = player.getLocalTranslation();
-					player.setLocalTranslation(vector.x + value * speed, vector.y, vector.z);
-				}
+				if (!name.equals(MAPPING_ROTATE))
+					return;
 			}
-		}, "Walk", "Left", "Right");
-	}
-
-	public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-	}
-
-	public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
-		// unused
+		}, MAPPING_ROTATE);
 	}
 
 }
