@@ -1,5 +1,7 @@
 package mg.rova.monkey;
 
+import com.jme3.animation.AnimChannel;
+import com.jme3.animation.AnimControl;
 import com.jme3.app.SimpleApplication;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
@@ -9,12 +11,15 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.input.controls.Trigger;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.system.AppSettings;
 
 public class App extends SimpleApplication {
@@ -26,7 +31,7 @@ public class App extends SimpleApplication {
 	public static final String MAPPING_ROTATE = "Rotate";
 
 	private Geometry currentGeometry = null;
-	private static Box mesh = new Box(1, 1, 1);
+	private static Sphere mesh = new Sphere(16, 16, 1.0f);
 
 	public static void main(String[] args) {
 		final App app = new App();
@@ -44,9 +49,20 @@ public class App extends SimpleApplication {
 
 		initCenterMark();
 		initKey();
+		
+		DirectionalLight sun = new DirectionalLight();
+		sun.setDirection(new Vector3f(-0.5f, -0.5f, -0.5f ));
+		sun.setColor(ColorRGBA.White);
+		rootNode.addLight(sun);
+		
+		final Spatial spatial = assetManager.loadModel("Models/HoverTank/Tank2.mesh.xml");
+		spatial.move(0, 0, 0);
+//		AnimChannel channel = control.createChannel();
+//		channel.setAnim("JumpLoop");
+		rootNode.attachChild(spatial);
 
-		rootNode.attachChild(newBox("Red Cube", new Vector3f(0, 1.5f, 0), ColorRGBA.Red));
-		rootNode.attachChild(newBox("Blue Cube", new Vector3f(0, -1.5f, 0), ColorRGBA.Blue));
+//		rootNode.attachChild(newBox("Red Cube", new Vector3f(0, 1.5f, 0), ColorRGBA.Red));
+//		rootNode.attachChild(newBox("Blue Cube", new Vector3f(0, -1.5f, 0), ColorRGBA.Blue));
 	}
 
 	private void initCenterMark() {
